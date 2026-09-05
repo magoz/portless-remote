@@ -1,4 +1,4 @@
-import { Context, Effect, FileSystem, Layer, Option } from "effect";
+import { Context, Effect, FileSystem, Layer, Option, Schema } from "effect";
 import type { PlatformError } from "effect/PlatformError";
 import { BoundaryError } from "./model.js";
 
@@ -23,6 +23,26 @@ export class Files extends Context.Service<
       const fs = yield* FileSystem.FileSystem;
       const read = Effect.fn("Files.read")(
         function* (path: string, noFollow = false) {
+          if (noFollow) {
+            // Native stat follows links, including dangling ones. Inspect the
+            // directory entry first so only genuine absence means first run.
+            const link = yield* Effect.result(fs.readLink(path));
+            if (link._tag === "Success") {
+              return yield* Effect.fail(
+                new BoundaryError({ code: "file-symlink-rejected" }),
+              );
+            }
+            // POSIX readlink reports EINVAL for an existing non-link. Effect's
+            // Node backend preserves this errno in the typed platform cause.
+            // All other failures remain failures; no raw cause is retained.
+            if (
+              !Schema.is(Schema.Struct({ code: Schema.Literal("EINVAL") }))(
+                link.failure.reason.cause,
+              )
+            ) {
+              return yield* Effect.fail(link.failure);
+            }
+          }
           // Check before open to reject FIFOs/devices. The state directory is private;
           // this is not a defense against an attacker running as the same OS user.
           const stat = yield* fs.stat(path);

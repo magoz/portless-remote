@@ -95,6 +95,32 @@ it.live(
     }).pipe(Effect.provide(platform)),
 );
 
+for (const nested of [false, true])
+  it.live(
+    `rejects dangling input directory symlinks before any state creation (nested=${nested})`,
+    () =>
+      Effect.gen(function* () {
+        const { fs, path, config } = yield* fixture;
+        yield* fs.remove(config.portlessStateDir, { recursive: true });
+        yield* fs.symlink(config.dataDir, config.portlessStateDir);
+        const scopedConfig = nested
+          ? {
+              ...config,
+              portlessStateDir: path.join(config.portlessStateDir, "child"),
+              dataDir: path.join(config.dataDir, "child"),
+            }
+          : config;
+        const result = yield* Effect.result(
+          Effect.void.pipe(Effect.provide(intentStoreLayer(scopedConfig))),
+        );
+        expect(result._tag).toBe("Failure");
+        expect(yield* fs.exists(config.dataDir)).toBe(false);
+        expect(yield* fs.readLink(config.portlessStateDir)).toBe(
+          config.dataDir,
+        );
+      }).pipe(Effect.provide(platform)),
+  );
+
 it.live("rejects symlinked intent and shared-writable data directories", () =>
   Effect.gen(function* () {
     const { fs, path, root, config } = yield* fixture;
@@ -117,6 +143,36 @@ it.live("rejects symlinked intent and shared-writable data directories", () =>
       ))._tag,
     ).toBe("Failure");
   }).pipe(Effect.provide(platform)),
+);
+
+it.live(
+  "rejects dangling intent symlinks without resetting or replacing them",
+  () =>
+    Effect.gen(function* () {
+      const { fs, path, root, config } = yield* fixture;
+      yield* fs.makeDirectory(config.dataDir, { mode: 0o700 });
+      const missingTarget = path.join(root, "missing-intent.json");
+      const statePath = path.join(config.dataDir, "intent.json");
+      yield* fs.symlink(missingTarget, statePath);
+      const result = yield* Effect.result(
+        Effect.gen(function* () {
+          const store = yield* IntentStore;
+          yield* store.load;
+          yield* store.save({
+            ...emptyIntent(config),
+            retainedHosts: ["app.dev.example.com"],
+          });
+        }).pipe(Effect.provide(intentStoreLayer(config))),
+      );
+      expect(result._tag === "Failure" && result.failure.code).toBe(
+        "file-symlink-rejected",
+      );
+      expect(yield* fs.readLink(statePath)).toBe(missingTarget);
+      expect(yield* fs.exists(missingTarget)).toBe(false);
+      expect(yield* fs.exists(path.join(config.dataDir, "observer.lock"))).toBe(
+        false,
+      );
+    }).pipe(Effect.provide(platform)),
 );
 
 it.live("bounds file reads and treats missing files separately", () =>

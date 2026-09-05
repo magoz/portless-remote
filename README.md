@@ -22,7 +22,7 @@ Or build with `npm run build`, then run `node dist/cli.js ...`.
 
 - `dry-run` and `status` produce the same fresh JSON report.
 - `watch` emits changed reports as JSON lines. Filesystem notifications plus periodic scans discover new routes and recover after directory recreation. Ctrl+C/SIGTERM closes watchers and releases the lock.
-- `ready` is **always false** at this milestone. Exit 0 means a report was produced, **not** that HTTPS works. Configuration/cache failures exit nonzero; registry/DNS observation failures appear in the report so watch can recover.
+- `ready` is **always false** at this milestone. Exit 0 means a report was produced, **not** that HTTPS works. Startup configuration/cache-load failures exit nonzero. Reconciliation save failures and registry/DNS observation failures appear in report blockers so watch can recover; inspect those blockers even when exit status is 0.
 - These commands write **only companion intent/lock files** in `dataDir`. They are read-only with respect to Portless and external infrastructure.
 
 ### Configuration
@@ -51,7 +51,7 @@ For `app.dev.example.com` and `feat.app.dev.example.com`, the planner proposes:
 
 - Explicit `A`/`AAAA` records for both names, plus `*.app.dev.example.com`.
 - Caddy DNS-01 subjects `app.dev.example.com` and `*.app.dev.example.com`, reused across sibling worktrees.
-- An exact hostname allowlist forwarding to **`https://127.0.0.1:443`**, never the transient app port. The intent preserves HTTP `Host`, sanitizes forwarded origin headers, and verifies TLS against the Portless CA with the route hostname as SNI.
+- An exact hostname allowlist forwarding to **`https://127.0.0.1:443`**, never the transient app port. The intent specifies preserved HTTP `Host`, sanitized forwarded origin headers, and TLS verification against the Portless CA with the route hostname as SNI.
 
 `deep.feat.app.dev.example.com` needs additional `feat.app.dev.example.com` / `*.feat.app.dev.example.com` coverage. The registry cannot tell dotted app names from branch labels, so grouping uses the immediate parent below the namespace. No flattened worktree slugs or `*.dev.example.com` TLS assumption.
 

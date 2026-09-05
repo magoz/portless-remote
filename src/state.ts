@@ -29,15 +29,30 @@ export const intentStoreLayer = (config: Config) =>
       // Resolve existing symlink ancestors, including when Portless has not started.
       const canonicalPath = (
         name: string,
-      ): Effect.Effect<string, PlatformError> =>
+      ): Effect.Effect<string, PlatformError | BoundaryError> =>
         fs.realPath(name).pipe(
           Effect.catchIf(
             (error) =>
               error.reason._tag === "NotFound" && path.dirname(name) !== name,
             () =>
-              canonicalPath(path.dirname(name)).pipe(
-                Effect.map((parent) => path.join(parent, path.basename(name))),
-              ),
+              Effect.gen(function* () {
+                // realPath cannot distinguish absence from a dangling symlink.
+                // Reject links at every missing ancestor before creating dataDir;
+                // otherwise creating its target could turn a safe-looking lexical
+                // path into an alias of the Portless input directory.
+                const link = yield* Effect.result(fs.readLink(name));
+                if (link._tag === "Success") {
+                  return yield* Effect.fail(
+                    new BoundaryError({
+                      code: "data-directory-dangling-symlink",
+                    }),
+                  );
+                }
+                if (link.failure.reason._tag !== "NotFound")
+                  return yield* Effect.fail(link.failure);
+                const parent = yield* canonicalPath(path.dirname(name));
+                return path.join(parent, path.basename(name));
+              }),
           ),
         );
       const data = yield* Effect.gen(function* () {

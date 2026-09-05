@@ -42,7 +42,7 @@ DNS/certificate intent grows monotonically, so project restarts, dead routes, an
 
 Gateway removals need two matching healthy snapshots separated by at least `pollIntervalMs`. Errors reset that confirmation. On restart, retained names are used conservatively until removal confirmation; this does not assert that an actual gateway has those routes. `gateway.action: hold` means no proposed replacement should be used. The gateway structure is descriptive, never executable.
 
-`dataDir/intent.json` has version, namespace, owner ID and retained names only. A same-filesystem temporary file is written mode 0600, flushed, atomically renamed, then the directory is flushed. The short save/Ref commit is uninterruptible; network waits and the watch loop remain cancellable. Serialized size is checked before replacing existing state, so the companion cannot write an intent larger than it can subsequently read. `maxHosts` and the 2MiB bound both apply.
+`dataDir/intent.json` has version, namespace, owner ID and retained names only. A same-filesystem temporary file is written mode 0600, flushed, atomically renamed, then the directory is flushed. The short save/Ref commit is uninterruptible; inventory waits and the watch loop remain cancellable. Serialized size is checked before replacing existing state, so the companion cannot write an intent larger than it can subsequently read. `maxHosts` and the 2MiB bound both apply.
 
 `dataDir/observer.lock` is an exclusive directory for the process lifetime. No stale-lock stealing or PID-based auto-recovery is attempted. On an ordinary exit/SIGINT/SIGTERM, scoped cleanup removes it. After a hard crash:
 
@@ -52,7 +52,7 @@ Gateway removals need two matching healthy snapshots separated by at least `poll
 
 Corrupt, oversized, mismatched-owner/namespace or unsupported-version intent fails closed without overwriting it. Restore a known-good backup. If deliberate cache reset or retention pruning is necessary, do it offline after reviewing the recorded names; there is no automatic external resource deletion. Changing owner/namespace requires a separately reviewed state directory/migration, not silently adopting the previous identity. Changing the target address can produce hypothetical owned updates or unmanaged conflicts.
 
-Symlink ancestors are canonicalized before checking directory separation. Data directories must be owned by the current user and not group/world-accessible; existing permissions are never relaxed or changed. Intent symlinks are rejected. This is not a sandbox against a malicious process with the same OS identity changing files between checks. Protect the observer/state from untrusted code; external write credentials must eventually live on a separately protected control plane, not in app environments.
+Symlink ancestors are canonicalized before checking directory separation; dangling input or data-directory symlinks are rejected before creating any state. Data directories must be owned by the current user and not group/world-accessible; existing permissions are never relaxed or changed. Intent symlinks are rejected. This is not a sandbox against a malicious process with the same OS identity changing files between checks. Protect the observer/state from untrusted code; external write credentials must eventually live on a separately protected control plane, not in app environments.
 
 ## DNS and certificate planning
 
@@ -75,7 +75,7 @@ Implementation/permission decisions still needed before external changes:
 - Staging ACME testing only with explicit permission, then deliberate public issuance approval. Verify DNS propagation and certificate readiness before offering URLs as ready.
 - Real browser auth/callback, streaming/WebSocket/HMR and device tests. JS/unit tests are not native-device validation.
 
-No public release, license choice, push, credentials, public issuance or infrastructure deployment is part of this milestone.
+This milestone does not implement public releases, credential provisioning, certificate issuance or infrastructure deployment. Publishing repository changes and choosing a license require explicit owner authorization.
 
 ## Primary sources
 
