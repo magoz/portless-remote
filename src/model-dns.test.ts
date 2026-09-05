@@ -24,6 +24,10 @@ for (const patch of [
   { dataDir: sample.portlessStateDir },
   { dataDir: `${sample.portlessStateDir}/remote` },
   { portlessStateDir: 'relative' },
+  { portlessStateDir: '/tmp/alias/../portless' },
+  { portlessCaFile: '/tmp/alias/../ca.pem' },
+  { dnsInventoryFile: '/tmp/alias/../inventory.json' },
+  { dataDir: '/tmp/alias/../state' },
   { dnsToken: 'secret-canary' },
   { maxHosts: 0 },
   { pollIntervalMs: 0 }

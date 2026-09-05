@@ -29,7 +29,7 @@ Code quality uses **Oxlint** (`npm run lint`, `npm run lint:fix`) and **Oxfmt** 
 
 ### Configuration
 
-[`examples/config.json`](examples/config.json) contains placeholders, not machine configuration. All configured filesystem paths must be absolute; `~` and environment substitutions are not expanded.
+[`examples/config.json`](examples/config.json) contains placeholders, not machine configuration. All configured filesystem paths must be absolute and contain no `..` components; parent traversal is rejected rather than normalized across symlinks. `~` and environment substitutions are not expanded.
 
 | Field                      | Meaning                                                                                                                                                                             |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

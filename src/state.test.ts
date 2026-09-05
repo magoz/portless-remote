@@ -85,6 +85,52 @@ it.live('refuses overlapping symlink paths before creating anything in Portless 
   }).pipe(Effect.provide(platform))
 )
 
+for (const input of ['portlessCaFile', 'dnsInventoryFile'] as const)
+  for (const aliased of [false, true])
+    it.live(`rejects state below missing ${input} before creation (aliased=${aliased})`, () =>
+      Effect.gen(function* () {
+        const { fs, path, root, config } = yield* fixture
+        const missingInput = path.join(root, 'missing-input')
+        const alias = path.join(root, 'alias')
+        if (aliased) yield* fs.symlink(root, alias)
+        const dataDir = path.join(aliased ? alias : root, 'missing-input', 'state')
+        const result = yield* Effect.result(
+          Effect.void.pipe(
+            Effect.provide(intentStoreLayer({ ...config, [input]: missingInput, dataDir }))
+          )
+        )
+        expect(result._tag === 'Failure' && result.failure.code).toBe(
+          'data-directory-overlaps-input'
+        )
+        expect(yield* fs.exists(missingInput)).toBe(false)
+        expect(yield* fs.exists(dataDir)).toBe(false)
+        expect(yield* fs.readDirectory(config.portlessStateDir)).toEqual([])
+      }).pipe(Effect.provide(platform))
+    )
+
+for (const field of ['portlessStateDir', 'portlessCaFile', 'dnsInventoryFile', 'dataDir'] as const)
+  it.live(`rejects symlink parent traversal in ${field} before state creation`, () =>
+    Effect.gen(function* () {
+      const { fs, path, root, config } = yield* fixture
+      const nested = path.join(root, 'other', 'nested')
+      const alias = path.join(root, 'alias')
+      yield* fs.makeDirectory(nested, { recursive: true })
+      yield* fs.symlink(nested, alias)
+      const missingInput = path.join(root, 'other', 'missing-input')
+      const dataDir = path.join(missingInput, 'state')
+      // Preserve the literal parent component: path.join would hide this regression.
+      const input = `${alias}/../missing-input${field === 'dataDir' ? '/state' : ''}`
+      const scopedConfig = { ...config, dataDir, [field]: input }
+      const result = yield* Effect.result(
+        Effect.void.pipe(Effect.provide(intentStoreLayer(scopedConfig)))
+      )
+      expect(result._tag === 'Failure' && result.failure.code).toBe('config-unsafe')
+      expect(yield* fs.exists(missingInput)).toBe(false)
+      expect(yield* fs.exists(scopedConfig.dataDir)).toBe(false)
+      expect(yield* fs.readDirectory(config.portlessStateDir)).toEqual([])
+    }).pipe(Effect.provide(platform))
+  )
+
 for (const nested of [false, true])
   it.live(
     `rejects dangling input directory symlinks before any state creation (nested=${nested})`,

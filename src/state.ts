@@ -6,6 +6,7 @@ import {
   emptyIntent,
   IntentSchema,
   isWithin,
+  validConfigPaths,
   validateIntent
 } from '#app/model'
 import type { Config, Intent } from '#app/model'
@@ -23,6 +24,8 @@ export const intentStoreLayer = (config: Config) =>
   Layer.effect(
     IntentStore,
     Effect.gen(function* () {
+      if (!validConfigPaths(config))
+        return yield* Effect.fail(new BoundaryError({ code: 'config-unsafe' }))
       const fs = yield* FileSystem.FileSystem
       const path = yield* Path.Path
       const files = yield* Files
@@ -63,7 +66,9 @@ export const intentStoreLayer = (config: Config) =>
           isWithin(portless, data) ||
           isWithin(data, portless) ||
           isWithin(data, caFile) ||
-          (inventoryFile !== undefined && isWithin(data, inventoryFile))
+          isWithin(caFile, data) ||
+          (inventoryFile !== undefined &&
+            (isWithin(data, inventoryFile) || isWithin(inventoryFile, data)))
         ) {
           return yield* Effect.fail(new BoundaryError({ code: 'data-directory-overlaps-input' }))
         }

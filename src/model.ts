@@ -60,6 +60,16 @@ const ConfigSchema = Schema.Struct({
 })
 export type Config = typeof ConfigSchema.Type
 
+// Parent components are ambiguous when callers normalize before following symlinks.
+// Reject them instead of silently assigning different input paths to different readers.
+export const validConfigPaths = (config: Config): boolean =>
+  [
+    config.portlessStateDir,
+    config.dataDir,
+    config.portlessCaFile,
+    ...(config.dnsInventoryFile === undefined ? [] : [config.dnsInventoryFile])
+  ].every(name => isAbsolute(name) && !name.split('/').includes('..'))
+
 export const parseConfig = (text: string) =>
   decodeJson(ConfigSchema, text, 'config-invalid').pipe(
     Effect.filterOrFail(
@@ -68,8 +78,7 @@ export const parseConfig = (text: string) =>
         c.namespace.includes('.') &&
         !/(?:^|\.)(localhost|local|internal|test|invalid|onion)$/.test(c.namespace) &&
         /^[a-z0-9][a-z0-9-]{0,62}$/.test(c.ownerId) &&
-        [c.portlessStateDir, c.dataDir, c.portlessCaFile].every(isAbsolute) &&
-        (c.dnsInventoryFile === undefined || isAbsolute(c.dnsInventoryFile)) &&
+        validConfigPaths(c) &&
         !isWithin(c.portlessStateDir, c.dataDir) &&
         !isWithin(c.dataDir, c.portlessStateDir) &&
         privateAddress(c.gatewayAddress),
