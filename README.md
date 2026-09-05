@@ -18,7 +18,9 @@ npm run dev -- status --config config.local.json
 npm run dev -- watch --config config.local.json
 ```
 
-Or build with `npm run build`, then run `node dist/cli.js ...`.
+Or build with `npm run build`, then run `node dist/cli.js ...`. Development runs TypeScript directly on Node using the `development` import condition; compiled execution uses native extensionless `#app/...` aliases mapped to `dist/`.
+
+Code quality uses **Oxlint** (`npm run lint`, `npm run lint:fix`) and **Oxfmt** (`npm run format:check`, `npm run format:fix`). `npm run check` includes both. See [coding and testing standards](docs/standards.md).
 
 - `dry-run` and `status` produce the same fresh JSON report.
 - `watch` emits changed reports as JSON lines. Filesystem notifications plus periodic scans discover new routes and recover after directory recreation. Ctrl+C/SIGTERM closes watchers and releases the lock.

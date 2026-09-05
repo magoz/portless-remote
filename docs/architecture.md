@@ -15,6 +15,8 @@ Portless-owned routes.json
   → dry-run JSON / not-ready status
 ```
 
+Project imports use native extensionless `#app/...` aliases defined in `package.json`: source files for TypeScript/development, emitted files for ordinary Node execution. Tests are colocated with source and excluded from the build. [Coding standards](standards.md) document Oxfmt/Oxlint policy and module resolution.
+
 First-party Effect v4 modules provide `Context.Service`, `Layer`, `Schema`, `Effect.fn`, `Ref`, `Semaphore`, `Schedule`, `Queue`, `Stream`, `FileSystem`, `Path`, CLI and Node runtime. `@effect/vitest` provides effect/scoped tests and `TestClock`. Small synchronous Node built-ins handle pure IP/path checks and the signal-0 PID boundary; there are no custom Promise loops, timers, watcher callbacks, or third-party runtime frameworks.
 
 - `src/model.ts`: credential-free configuration, strict hostnames and persisted intent schema.

@@ -2,7 +2,7 @@
 
 ## Scope and safety
 
-This repository currently implements a read-only Portless observer and dry-run planner, not a live HTTPS deployment. See `README.md` and `docs/architecture.md` for behavior, boundaries and remaining gates.
+This repository currently implements a read-only Portless observer and dry-run planner, not a live HTTPS deployment. See `README.md` and `docs/architecture.md` for behavior, boundaries and remaining gates. Follow `docs/standards.md` for TypeScript, Effect, import and testing conventions.
 
 - Use **Effect v4** and matching first-party packages; current pins are `4.0.0-rc.112`. Use native Effect services, schemas, layers, scoped resources, CLI, filesystem and test APIs. Do not add v3 packages or handwritten Promise/timer orchestration.
 - Portless owns app startup, registration, routes and cleanup. Production code must not mutate Portless state or call mutating RouteStore methods. Compatibility tests pin Portless 0.15.6.
@@ -13,6 +13,6 @@ This repository currently implements a read-only Portless observer and dry-run p
 
 ## Development
 
-`npm ci`, then `npm run check` (typecheck, Effect Vitest tests, build, formatting). Use the npm lockfile. Test filesystem/process behavior only with scoped temporary fixtures and owned child processes; never use a live app registry as a write fixture.
+`npm ci`, then `npm run check` (Oxlint, typecheck, build, colocated Effect Vitest tests, Oxfmt). Use `npm run lint:fix` and `npm run format:fix` for fixes; use the npm lockfile. Project imports use extensionless native `#app/...` aliases, with separate `import type` declarations. No explicit `any` or type casts; `as const` is allowed. Tests live beside source, with shared fixtures in `src/testing/`, and never enter the compiled output. Test filesystem/process behavior only with scoped temporary fixtures and owned child processes; never use a live app registry as a write fixture.
 
 Use `Context.Service` + `Layer` for boundaries, `Schema` for external data and typed errors, `Effect.fn` for effectful operations, and first-party `@effect/vitest`/`TestClock` for behavior and cancellation tests. Keep pure planning functions separate from I/O. Errors should carry safe codes, not raw credential-bearing responses or input.
