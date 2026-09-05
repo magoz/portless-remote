@@ -1,0 +1,12 @@
+{
+  "namespace": "dev.example.com",
+  "ownerId": "dev-gateway",
+  "portlessStateDir": "/home/dev/.portless",
+  "dataDir": "/home/dev/.local/state/portless-remote",
+  "gatewayAddress": "10.10.10.10",
+  "portlessCaFile": "/home/dev/.portless/ca.pem",
+  "pidMode": "same-namespace",
+  "includePersistentAliases": false,
+  "pollIntervalMs": 5000,
+  "maxHosts": 1000
+}

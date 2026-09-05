@@ -1,0 +1,44 @@
+{
+  "name": "portless-remote",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Effect-based read-only Portless observer and remote HTTPS dry-run planner",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "bin": {
+    "portless-remote": "dist/cli.js"
+  },
+  "imports": {
+    "#app/*": {
+      "types": "./src/*.ts",
+      "development": "./src/*.ts",
+      "default": "./dist/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && vitest run",
+    "dev": "node --conditions=development src/cli.ts",
+    "lint": "oxlint --max-warnings 0 .",
+    "lint:fix": "oxlint --fix .",
+    "format:fix": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "check": "npm run lint && npm run typecheck && npm test && npm run format:check"
+  },
+  "dependencies": {
+    "@effect/platform-node": "4.0.0-rc.112",
+    "effect": "4.0.0-rc.112"
+  },
+  "devDependencies": {
+    "@effect/vitest": "4.0.0-rc.112",
+    "@types/node": "24.13.3",
+    "oxfmt": "0.66.0",
+    "oxlint": "1.81.0",
+    "portless": "0.15.6",
+    "typescript": "5.9.3",
+    "vitest": "4.1.9"
+  }
+}

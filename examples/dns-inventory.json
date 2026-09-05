@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "namespace": "dev.example.com",
+  "records": [
+    {
+      "name": "existing.dev.example.com",
+      "type": "A",
+      "values": ["10.10.10.20"]
+    },
+    {
+      "name": "app.dev.example.com",
+      "type": "A",
+      "values": ["10.10.10.10"],
+      "ownerId": "dev-gateway"
+    },
+    {
+      "name": "_acme-challenge.app.dev.example.com",
+      "type": "TXT",
+      "values": ["example-only"]
+    }
+  ]
+}

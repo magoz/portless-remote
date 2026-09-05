@@ -1,0 +1,40 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "typescript"],
+  "categories": { "correctness": "error" },
+  "env": { "builtin": true, "node": true },
+  "ignorePatterns": ["node_modules/**", "dist/**", "coverage/**"],
+  "rules": {
+    "no-array-constructor": "error",
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "no-var": "error",
+    "prefer-const": "error",
+    "prefer-rest-params": "error",
+    "prefer-spread": "error",
+    "typescript/ban-ts-comment": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/consistent-type-assertions": ["error", { "assertionStyle": "never" }],
+    "typescript/consistent-type-imports": [
+      "error",
+      { "prefer": "type-imports", "fixStyle": "separate-type-imports" }
+    ],
+    "typescript/no-require-imports": "error",
+    "import/no-default-export": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["./**", "../**"],
+            "message": "Use extensionless #app/... imports for project modules."
+          },
+          {
+            "group": ["**/*.js", "**/*.ts", "**/*.mjs", "**/*.mts", "**/*.cjs", "**/*.cts"],
+            "message": "Package and project aliases must be extensionless."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [{ "files": ["*.config.ts"], "rules": { "import/no-default-export": "off" } }]
+}
